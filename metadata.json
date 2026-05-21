@@ -1,0 +1,10 @@
+{
+  "name": "LogiAlloc - Industrial Sourcing & Spatial Allocation System",
+  "description": "An AI-powered multi-pillar logistics and spatial allocation suite incorporating 3D container packing, dynamic RFQ bidding, and RAG ground-control safety copilots.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
