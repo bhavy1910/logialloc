@@ -68,10 +68,10 @@ const OrdersManagement: React.FC<Props> = ({ user }) => {
         <div className="p-6 bg-amber-500/10 border-l-4 border-amber-500 text-amber-900 dark:text-amber-400 rounded-3xl text-xs space-y-2 font-semibold">
           <div className="flex items-center space-x-2 text-sm font-black uppercase tracking-wider text-amber-600">
             <Lock size={16} />
-            <span>AI COMPLIANT VEHICLE ROUTING LOCK</span>
+            <span>CARRIER FILTER ACTIVE</span>
           </div>
           <p className="leading-relaxed">
-            In compliance with our Neural optimization protocols, this portal is strictly and dynamically filtered to display ONLY those orders specifically evaluated and recommended for <strong>ROAD / TRUCK</strong> transit dispatch by our AI Ground Control Recommender.
+            This portal displays orders assigned for road/truck transport transit dispatch. Use the filter below or look at active drivers to dispatch vehicles.
           </p>
         </div>
       )}

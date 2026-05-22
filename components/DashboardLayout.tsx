@@ -89,19 +89,11 @@ const DashboardLayout: React.FC<Props> = ({ user, onLogout, currentView, onNavig
                 active={currentView === 'ORDERS'} 
                 onClick={() => onNavigate('ORDERS')}
               />
-              {sourcingOrderAccepted && (
-                <SidebarItem 
-                  icon={PlusCircle} 
-                  label="New Requirement" 
-                  active={currentView === 'CREATE_REQ' || currentView === 'ALLOCATE'} 
-                  onClick={() => onNavigate('CREATE_REQ')}
-                />
-              )}
               <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mt-6 mb-2 font-mono">Sourcing & AI</p>
               <SidebarItem 
                 icon={Award} 
                 label="Sourcing & RFQ" 
-                active={currentView === 'SUPPLIERS'} 
+                active={currentView === 'SUPPLIERS' || currentView === 'CREATE_REQ' || currentView === 'ALLOCATE'} 
                 onClick={() => onNavigate('SUPPLIERS')}
               />
               <SidebarItem 
@@ -148,6 +140,13 @@ const DashboardLayout: React.FC<Props> = ({ user, onLogout, currentView, onNavig
                 label="3D Bin Packing" 
                 active={currentView === 'BIN_PACKING'} 
                 onClick={() => onNavigate('BIN_PACKING')}
+              />
+              <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mt-6 mb-2 font-mono">Account</p>
+              <SidebarItem 
+                icon={UserCircle} 
+                label="Profile" 
+                active={currentView === 'PROFILE'} 
+                onClick={() => onNavigate('PROFILE')}
               />
             </>
           )}
@@ -236,7 +235,6 @@ const DashboardLayout: React.FC<Props> = ({ user, onLogout, currentView, onNavig
         <header className="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10 px-8 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Industrial Supply Engine</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest font-black">Period: Jan 2026 • Live Network</p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">

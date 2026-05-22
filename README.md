@@ -1,45 +1,20 @@
-# LogiAlloc
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-LogiAlloc is an AI-powered logistics allocation and optimization platform designed to automate shipment planning, fleet allocation, route optimization, and operational decision-making using artificial intelligence.
+# Run and deploy your AI Studio app
 
-The system helps logistics companies improve efficiency, reduce operational costs, optimize fleet usage, and enable real-time smart allocation of resources.
+This contains everything you need to run your app locally.
 
----
+View your app in AI Studio: https://ai.studio/apps/8597d6a3-8b4e-4a91-9867-f114bd26bc86
 
-# Features
+## Run Locally
 
-- AI-based shipment allocation
-- Intelligent fleet management
-- Route optimization
-- Real-time logistics monitoring
-- Predictive operational insights
-- Gemini AI integration
-- Scalable architecture
+**Prerequisites:**  Node.js
 
----
 
-# Tech Stack
-
-- Node.js
-- Gemini API
-- AI Studio
-- Modern JavaScript Framework
-
----
-
-# Prerequisites
-
-Before running the project locally, ensure you have:
-
-- Node.js installed
-- Gemini API Key
-
----
-
-# Installation
-
-Clone the repository:
-
-```bash
-git clone <repository-url>
-cd logialloc
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

@@ -85,7 +85,13 @@ const App: React.FC = () => {
       case 'BIN_PACKING':
         return <BinPackingAI />;
       case 'SUPPLIERS':
-        return <SuppliersPortal user={currentUser!} onOrderAccepted={() => setCurrentView('CREATE_REQ')} />;
+        return (
+          <SuppliersPortal 
+            user={currentUser!} 
+            onOrderAccepted={() => setCurrentView('CREATE_REQ')} 
+            onNavigateView={(view) => setCurrentView(view as any)}
+          />
+        );
       case 'BOT':
         return <GroundControlBot user={currentUser!} />;
       case 'CREATE_REQ':
@@ -96,6 +102,7 @@ const App: React.FC = () => {
               setDraftRequirement(req);
               setCurrentView('ALLOCATE');
             }} 
+            onNavigateView={(view) => setCurrentView(view as any)}
           />
         );
       case 'ALLOCATE':
@@ -103,6 +110,7 @@ const App: React.FC = () => {
           <ModeAllocation 
             requirement={draftRequirement} 
             onNext={() => setCurrentView('ORDERS')} 
+            onNavigateView={(view) => setCurrentView(view as any)}
           />
         );
       case 'DRIVERS':

@@ -34,23 +34,18 @@ interface ChatMessage {
 }
 
 const GroundControlBot: React.FC<Props> = ({ user }) => {
-  // Tabs: COPILOT (Chat and scenario alarms), DECIDER (Train vs Truck dynamic analyzer)
-  const [activeTab, setActiveTab] = useState<'COPILOT' | 'DECIDER'>('COPILOT');
-  
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       sender: 'model',
-      text: `Hello ${user.fullName}. Welcome to LogicAlloc Ground Control. I am your RAG-enabled logistics copilot. Open the "AI Train vs Truck Decider" tab to obtain dynamic model choice recommendations for active requirements, or query anything here about clinker allocations or container stacking densities.`,
+      text: `Hello ${user.fullName}. Welcome to LogicAlloc Ground Control. I am your RAG-enabled logistics copilot. Ask me anything here about clinker allocations or container stacking densities.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
   const [inputText, setInputText] = useState('');
-  const [activePersona, setActivePersona] = useState<'Site Manager' | 'Transport Provider' | 'System Admin'>(() => {
-    if (user.role === UserRole.SITE_MANAGER) return 'Site Manager';
-    if (user.role === UserRole.TRANSPORT_PROVIDER) return 'Transport Provider';
-    return 'System Admin';
-  });
+  const activePersona: 'Site Manager' | 'Transport Provider' | 'System Admin' = 
+    user.role === UserRole.SITE_MANAGER ? 'Site Manager' :
+    user.role === UserRole.TRANSPORT_PROVIDER ? 'Transport Provider' : 'System Admin';
   const [isTyping, setIsTyping] = useState(false);
   const [emergencyFired, setEmergencyFired] = useState(false);
   const [emergencyDetails, setEmergencyDetails] = useState({ type: '', code: '', location: '' });
@@ -81,7 +76,7 @@ const GroundControlBot: React.FC<Props> = ({ user }) => {
     return () => clearTimeout(timer);
   }, [emergencyFired, countdown]);
 
-  // Load requirements on mount or tab focus
+  // Load requirements on mount
   useEffect(() => {
     const list = DB.getRequirements();
     setRequirements(list);
@@ -96,7 +91,7 @@ const GroundControlBot: React.FC<Props> = ({ user }) => {
       setSelectedReqId(targetList[0].id);
       triggerModeAnalysis(targetList[0]);
     }
-  }, [activeTab]);
+  }, []);
 
   const triggerModeAnalysis = (req: Requirement) => {
     setIsAnalyzing(true);
@@ -251,7 +246,7 @@ const GroundControlBot: React.FC<Props> = ({ user }) => {
         } else if (activePersona === 'Transport Provider') {
           fallbackText += "Drivers manifest database shows Driver Jane Cooper is active on vehicle GJ 123456 with 45% routing complete.";
         } else {
-          fallbackText += "System telemetry parameters show GBDT routing matched with 97% confidence gap.";
+          fallbackText += "Analysis shows the recommended option aligns with historical route performance.";
         }
         setMessages((prev) => [...prev, { sender: 'model', text: fallbackText, timestamp: now }]);
       }, 800);
@@ -275,7 +270,7 @@ const GroundControlBot: React.FC<Props> = ({ user }) => {
                 <AlertTriangle size={32} className="animate-bounce" />
               </div>
               <div>
-                <span className="bg-white/20 text-white px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest">FR-9.2 LEVEL I EMERGENCY PROTOCOL</span>
+                <span className="bg-white/20 text-white px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest">LEVEL I EMERGENCY PROTOCOL</span>
                 <h3 className="text-2xl font-black tracking-tight mt-1">{emergencyDetails.type}</h3>
               </div>
             </div>
@@ -315,52 +310,15 @@ const GroundControlBot: React.FC<Props> = ({ user }) => {
           </div>
           <div>
             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">AI Logistics Copilot</h2>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Multi-Pillar Neural Optimization Framework</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Interactive Decision and Planning Copilot</p>
           </div>
         </div>
 
-        {/* Tab Selection */}
-        <div className="flex space-x-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <button
-            onClick={() => setActiveTab('COPILOT')}
-            className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              activeTab === 'COPILOT'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Copilot Chat
-          </button>
-          <button
-            onClick={() => setActiveTab('DECIDER')}
-            className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center space-x-2 ${
-              activeTab === 'DECIDER'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Zap size={12} className="text-amber-500 animate-pulse" />
-            <span>AI Train vs Truck Decider</span>
-          </button>
-        </div>
       </div>
 
-      {activeTab === 'COPILOT' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Chat Console container */}
           <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-[550px]">
-            {/* Header */}
-            <div className="px-8 py-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
-                <div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Thread Mode</span>
-                  <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase">Secure Session • {activePersona} Context</h4>
-                </div>
-              </div>
-              <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">RAG_STORE_ACTIVE</span>
-            </div>
-
             {/* Messages viewport */}
             <div className="flex-1 overflow-y-auto p-8 space-y-6">
               {messages.map((msg, idx) => (
@@ -435,7 +393,7 @@ const GroundControlBot: React.FC<Props> = ({ user }) => {
               </h3>
 
               <p className="text-xs text-slate-500 leading-relaxed font-bold">
-                Test FR-9.2 automatic supervisor alarms by triggering these high-urgency highway events:
+                Test automatic safety notifications by triggering these high-urgency highway events:
               </p>
 
               <div className="space-y-3">
@@ -466,26 +424,6 @@ const GroundControlBot: React.FC<Props> = ({ user }) => {
                 </button>
               </div>
 
-              {/* Persona Override */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">Simulate Context</h4>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {(['Site Manager', 'Transport Provider'] as const).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setActivePersona(p)}
-                      className={`text-[8px] font-black px-2 py-2 rounded-xl border uppercase tracking-widest transition-all ${
-                        activePersona === p 
-                          ? 'bg-slate-900 dark:bg-blue-600 text-white border-transparent'
-                          : 'bg-white dark:bg-slate-850 hover:bg-slate-50 border-slate-200 dark:border-slate-800 text-slate-500'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div className="pt-4 border-t border-slate-50 dark:border-slate-800 space-y-3">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Helpful Prompts</h4>
                 <ul className="space-y-2 text-slate-500 dark:text-slate-400 font-bold text-xs">
@@ -503,231 +441,7 @@ const GroundControlBot: React.FC<Props> = ({ user }) => {
             </div>
           </div>
         </div>
-      ) : (
-        /* AI MODAL DECIDER VIEW: Train vs Truck Solver widget */
-        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-150 dark:border-slate-800 shadow-md p-8 md:p-12 space-y-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-50 dark:border-slate-800 pb-8">
-            <div className="space-y-1">
-              <span className="px-3.5 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/30 text-[10px] uppercase font-black tracking-widest rounded-full">PILLAR 4 COGNITIVE ENGINE</span>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">AI Modal Transport Choice Optimizer</h3>
-              <p className="text-xs font-bold text-slate-400 uppercase mt-0.5">Solve optimal road-to-rail tradeoffs dynamically for any active requirement</p>
-            </div>
-
-            <div className="flex flex-col space-y-1.5">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 pointer-events-none">Select Requirement Registry Item</label>
-              <select
-                value={selectedReqId}
-                onChange={(e) => handleReqChange(e.target.value)}
-                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 font-black text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500 min-w-[280px]"
-              >
-                {requirements.map((req) => (
-                  <option key={req.id} value={req.id}>
-                    {req.id}: {req.materialType} ({req.materialAmount} T) to {req.destination}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {selectedReqId ? (
-            <div className="space-y-10">
-              {/* CURRENT REQUIREMENT SPECS */}
-              {(() => {
-                const req = requirements.find(r => r.id === selectedReqId);
-                if (!req) return null;
-                return (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-slate-50 dark:bg-slate-950/65 p-6 rounded-3xl border border-slate-100 dark:border-slate-850">
-                    <div className="space-y-1">
-                      <p className="text-[9px] font-mono font-bold text-slate-400 uppercase">Material Cargo</p>
-                      <p className="text-sm font-black text-slate-800 dark:text-white truncate">{req.materialType}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[9px] font-mono font-bold text-slate-400 uppercase">Payload Weight</p>
-                      <p className="text-sm font-black text-slate-800 dark:text-white">{req.materialAmount} Tonnes</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[9px] font-mono font-bold text-slate-400 uppercase">Distance Index</p>
-                      <p className="text-sm font-black text-slate-800 dark:text-white">{req.distanceKm || 300} KM</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[9px] font-mono font-bold text-slate-400 uppercase">Current Registry Mode</p>
-                      <p className="text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase">{req.selectedMode}</p>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                
-                {/* DUAL COMPARATIVE COLUMNS */}
-                <div className="lg:col-span-7 space-y-6">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">Comparative Logistics Tradeoffs</h4>
-                  
-                  {isAnalyzing ? (
-                    <div className="h-64 flex flex-col justify-center items-center bg-slate-50 dark:bg-slate-950/30 rounded-[2rem] border border-dashed border-slate-200 dark:border-slate-800">
-                      <RefreshCw className="animate-spin text-blue-600 mb-3" size={32} />
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Running Advanced Axle & Carbon Multi-Agent Evaluator...</p>
-                    </div>
-                  ) : aiReport ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      
-                      {/* TRAIN CARD */}
-                      <div className={`p-6 rounded-[2rem] border flex flex-col justify-between transition-all ${
-                        aiReport.recommendedMode === TransportMode.RAIL 
-                          ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-950/10' 
-                          : 'border-slate-150 dark:border-slate-800 dark:bg-slate-950/20'
-                      }`}>
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 rounded-lg">RAIL / TRAIN</span>
-                            {aiReport.recommendedMode === TransportMode.RAIL && (
-                              <span className="text-[9px] font-black bg-emerald-600 text-white px-2 py-0.5 rounded-full uppercase">AI MATCH</span>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-4">
-                            <div>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase">Estimated cost</p>
-                              <p className="text-lg font-black text-slate-900 dark:text-white">₹ {aiReport.metrics.trainCost.toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase">Greenhouse CO2 Emissions</p>
-                              <p className="text-xs font-black text-emerald-600">{aiReport.metrics.trainCO2} Kg CO2</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase">Average Lead Time</p>
-                              <p className="text-xs font-bold dark:text-white">{aiReport.metrics.trainDays} (Marshalling rakes included)</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="pt-4 mt-6 border-t border-slate-100 dark:border-slate-850">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase">Efficiency Index</p>
-                          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-1 overflow-hidden">
-                            <div className="bg-emerald-500 h-full transition-all" style={{ width: '92%' }} />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* TRUCK CARD */}
-                      <div className={`p-6 rounded-[2rem] border flex flex-col justify-between transition-all ${
-                        aiReport.recommendedMode === TransportMode.TRUCK 
-                          ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-950/10' 
-                          : 'border-slate-150 dark:border-slate-800 dark:bg-slate-950/20'
-                      }`}>
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-100 dark:bg-indigo-950/60 px-3 py-1 rounded-lg">ROAD / TRUCK</span>
-                            {aiReport.recommendedMode === TransportMode.TRUCK && (
-                              <span className="text-[9px] font-black bg-indigo-600 text-white px-2 py-0.5 rounded-full uppercase">AI MATCH</span>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-4">
-                            <div>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase">Estimated cost</p>
-                              <p className="text-lg font-black text-slate-900 dark:text-white">₹ {aiReport.metrics.truckCost.toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase">Greenhouse CO2 Emissions</p>
-                              <p className="text-xs font-black text-rose-500 dark:text-rose-400">{aiReport.metrics.truckCO2} Kg CO2</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase">Average Lead Time</p>
-                              <p className="text-xs font-bold dark:text-white">{aiReport.metrics.truckDays} (Point-to-point dispatch agility)</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="pt-4 mt-6 border-t border-slate-100 dark:border-slate-850">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase">Efficiency Index</p>
-                          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-1 overflow-hidden">
-                            <div className="bg-indigo-500 h-full transition-all" style={{ width: '74%' }} />
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  ) : null}
-                </div>
-
-                {/* AI REPORT SUMMARY */}
-                <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-950/40 p-8 rounded-[2rem] border border-slate-150 dark:border-slate-800 space-y-6">
-                  <div className="flex items-center space-x-2">
-                    <Zap className="text-amber-500" size={18} />
-                    <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest font-mono">AI Recommended Outcome</h4>
-                  </div>
-
-                  {isAnalyzing ? (
-                    <div className="space-y-3 py-6 animate-pulse">
-                      <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl w-3/4" />
-                      <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-lg w-full" />
-                      <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-lg w-5/6" />
-                    </div>
-                  ) : aiReport ? (
-                    <div className="space-y-6">
-                      <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                        <div>
-                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Optimized Routing Allocation</p>
-                          <p className="text-2xl font-black text-slate-900 dark:text-white uppercase mt-0.5">
-                            {aiReport.recommendedMode === TransportMode.RAIL ? 'TRAIN (RAIL)' : 'TRUCK'}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Model Conf.</p>
-                          <p className="text-xl font-black text-emerald-600">{aiReport.score}%</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Strategic Reasoning Checklist</p>
-                        <div className="space-y-3">
-                          {aiReport.reasoning.map((reason, i) => (
-                            <div key={i} className="flex items-start space-x-2.5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-                              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">{reason}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <button
-                          onClick={applyModeRecommendation}
-                          disabled={updateSuccess}
-                          className={`w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                            updateSuccess 
-                              ? 'bg-emerald-600 text-white shadow-lg' 
-                              : 'bg-slate-900 hover:bg-slate-950 text-white'
-                          }`}
-                        >
-                          {updateSuccess ? '✓ Applied Successfully to Registry' : 'Apply AI Recommendation to Cargo'}
-                        </button>
-                        
-                        {updateSuccess && (
-                          <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450 rounded-xl border border-emerald-100 dark:border-emerald-900 flex items-center space-x-2 text-[10px] font-bold animate-in fade-in duration-300">
-                            <CheckCircle2 size={12} />
-                            <span>Requirement selection mode updated key parameters. Re-optimized in Gurobi and solver pipelines.</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-16 bg-slate-50 dark:bg-slate-950/20 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-              <HelpCircle size={48} className="mx-auto text-slate-300 dark:text-slate-700 mb-4" />
-              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-                No Site Manager requirements available inside your registered segment. Go to New Requirement tab to create some cargo demand!
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+      </div>
   );
 };
 

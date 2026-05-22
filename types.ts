@@ -112,6 +112,9 @@ export interface Requirement {
   wagonType?: WagonType;
   wagonCount?: number;
   roadVehicleType?: RoadVehicleType;
+  isAiOptimized?: boolean;
+  aiOptimizedCost?: number;
+  aiOptimizedSplit?: string;
 }
 
 // Added missing interface Driver

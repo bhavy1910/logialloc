@@ -12,16 +12,23 @@ import {
   Layers, 
   Calculator,
   Search,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Check,
+  TrendingDown,
+  Award,
+  Plus
 } from 'lucide-react';
 
 interface Props {
   user: User;
   onNext: (req: any) => void;
+  onNavigateView?: (view: string) => void;
 }
 
-const RequirementCreation: React.FC<Props> = ({ user, onNext }) => {
+const RequirementCreation: React.FC<Props> = ({ user, onNext, onNavigateView }) => {
   const [selectedMode, setSelectedMode] = useState<TransportMode>(TransportMode.RAIL);
+  const [isAiOptimized, setIsAiOptimized] = useState<boolean>(true);
   const [formData, setFormData] = useState({
     managerName: user.fullName,
     siteLocation: 'VADODARA MARSHALLING YARD - BRC',
@@ -47,6 +54,23 @@ const RequirementCreation: React.FC<Props> = ({ user, onNext }) => {
     }
   }, [isLargeOrder]);
 
+  // Load from sourcing if order accepted
+  useEffect(() => {
+    const isAccepted = localStorage.getItem('sourcing_order_accepted') === 'true';
+    if (isAccepted) {
+      const storedLocation = localStorage.getItem('accepted_bid_location') || 'VADODARA MARSHALLING YARD - BRC';
+      const storedDemand = localStorage.getItem('accepted_bid_demand') || '';
+      const storedMaterial = localStorage.getItem('accepted_bid_material') || 'CLINKER GRADE A';
+      
+      setFormData(prev => ({
+        ...prev,
+        siteLocation: storedLocation.toUpperCase(),
+        materialAmount: storedDemand,
+        materialType: storedMaterial.toUpperCase()
+      }));
+    }
+  }, []);
+
   const getDistance = (dest: string) => {
     const distances: Record<string, number> = {
       'AHMEDABAD': 120,
@@ -62,17 +86,58 @@ const RequirementCreation: React.FC<Props> = ({ user, onNext }) => {
     e.preventDefault();
     if (!formData.destination || !formData.materialAmount) return;
     
+    const computedDist = getDistance(formData.destination);
+    const optimizedCost = isAiOptimized 
+      ? Math.round((materialWeight * computedDist * 0.75 * 1.8) + (materialWeight * computedDist * 0.25 * 4.6))
+      : 0;
+
     onNext({
         ...formData,
         id: 'REQ-' + Math.random().toString(36).substr(2, 9),
         selectedMode,
-        distanceKm: getDistance(formData.destination),
-        createdAt: new Date().toISOString()
+        distanceKm: computedDist,
+        createdAt: new Date().toISOString(),
+        isAiOptimized,
+        aiOptimizedCost: optimizedCost,
+        aiOptimizedSplit: 'Rail: 75%, Road: 25%'
     });
   };
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+      
+      {/* Sourcing & Requirement Cohesive Tabs */}
+      {onNavigateView && (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 rounded-2xl flex flex-wrap gap-2 shadow-sm">
+          <button
+            onClick={() => onNavigateView('SUPPLIERS')}
+            className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            <Award size={13} />
+            <span>1. Sourcing Market</span>
+          </button>
+          <button
+            onClick={() => onNavigateView('CREATE_REQ')}
+            className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+          >
+            <Plus size={13} />
+            <span>2. Setup Requirement</span>
+          </button>
+          <button
+            onClick={() => onNavigateView('ALLOCATE')}
+            disabled={localStorage.getItem('sourcing_order_accepted') !== 'true'}
+            className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all ${
+              localStorage.getItem('sourcing_order_accepted') !== 'true'
+                ? 'opacity-40 cursor-not-allowed text-slate-300 dark:text-slate-600'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <TrendingDown size={13} />
+            <span>3. Provider Allocation</span>
+          </button>
+        </div>
+      )}
+
       <div className="text-center space-y-2">
          <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Requirement Setup</h2>
          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Industrial Logistics & Allocation</p>
@@ -123,13 +188,13 @@ const RequirementCreation: React.FC<Props> = ({ user, onNext }) => {
                     onChange={(e) => setFormData({...formData, materialType: e.target.value})}
                     className="w-full bg-white dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-xl p-4 font-bold text-slate-850 dark:text-white uppercase outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
                   >
-                     <option value="CLINKER GRADE A">CLINKER GRADE A</option>
+                     <option value="CLINKER GRADE A">CLINKER GRADE A (BULK)</option>
                      <option value="FLY ASH">FLY ASH</option>
                      <option value="PRECAST STEEL PIPES">PRECAST STEEL PIPES</option>
-                     <option value="SOLAR PANEL ARRAYS">SOLAR PANEL ARRAYS</option>
+                     <option value="SOLAR PANEL ARRAYS">SOLAR PANEL ARRAYS (MODULES)</option>
                      <option value="COAL & LIGNITE">COAL & LIGNITE</option>
-                     <option value="LIMESTONE MINERALS">LIMESTONE MINERALS</option>
-                     <option value="AGRI-GRAINS BULK">AGRI-GRAINS BULK</option>
+                     <option value="LIMESTONE FINE POWDER">LIMESTONE FINE POWDER</option>
+                     <option value="AGRI-GRAINS BULK">AGRI-GRAINS BULK (SILO)</option>
                      <option value="HEAVY BOILER MOTORS">HEAVY BOILER MOTORS</option>
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -276,6 +341,107 @@ const RequirementCreation: React.FC<Props> = ({ user, onNext }) => {
                     </div>
                  )}
               </div>
+            </div>
+
+            {/* AI Optimization Option Block */}
+            <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
+               <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center">
+                  <Sparkles size={14} className="mr-2 text-indigo-500 animate-pulse" /> AI Route & Cost Optimization Decision
+               </h3>
+               
+               <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Our advanced routing system analyzes real-time FOIS train schedules and truck fleet availability to propose a hybrid, carbon-friendly multi-modal layout.
+               </p>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                     type="button"
+                     onClick={() => setIsAiOptimized(true)}
+                     className={`p-5 rounded-2xl border-2 text-left transition-all relative flex flex-col justify-between h-32 ${
+                        isAiOptimized 
+                           ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-500 text-slate-850 dark:text-white ring-2 ring-emerald-500/10 shadow-sm' 
+                           : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-850 text-slate-400 hover:border-slate-200 dark:hover:border-slate-800'
+                     }`}
+                  >
+                     <div className="flex items-center justify-between w-full">
+                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${isAiOptimized ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600' : 'bg-slate-100 dark:bg-slate-850 text-slate-400'}`}>Highly Recommended</span>
+                        {isAiOptimized && (
+                           <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                              <Check size={12} strokeWidth={3} />
+                           </div>
+                        )}
+                     </div>
+                     <div>
+                        <h4 className="font-extrabold text-xs uppercase text-slate-800 dark:text-white">Approve AI Optimization</h4>
+                        <p className="text-[10px] font-bold text-slate-400 mt-0.5 font-mono">Load Hybrid Split (75% Rail / 25% Road)</p>
+                     </div>
+                  </button>
+
+                  <button
+                     type="button"
+                     onClick={() => setIsAiOptimized(false)}
+                     className={`p-5 rounded-2xl border-2 text-left transition-all relative flex flex-col justify-between h-32 ${
+                        !isAiOptimized 
+                           ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-500 text-slate-850 dark:text-white ring-2 ring-rose-500/10 shadow-sm' 
+                           : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-850 text-slate-400 hover:border-slate-200 dark:hover:border-slate-800'
+                     }`}
+                  >
+                     <div className="flex items-center justify-between w-full">
+                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${!isAiOptimized ? 'bg-rose-100 dark:bg-rose-950 text-rose-600' : 'bg-slate-100 dark:bg-slate-850 text-slate-400'}`}>Standard</span>
+                        {!isAiOptimized && (
+                           <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center">
+                              <Check size={12} strokeWidth={3} />
+                           </div>
+                        )}
+                     </div>
+                     <div>
+                        <h4 className="font-extrabold text-xs uppercase text-slate-800 dark:text-white">Deny Optimization</h4>
+                        <p className="text-[10px] font-bold text-slate-400 mt-0.5">Configure single-mode path manually</p>
+                     </div>
+                  </button>
+               </div>
+
+               {isAiOptimized && (
+                  <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-850 space-y-4 animate-in zoom-in-95 duration-300">
+                     <div className="flex items-center justify-between border-b border-dashed border-slate-200 dark:border-slate-800 pb-3">
+                        <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] uppercase tracking-widest">
+                           <Sparkles size={12} className="animate-pulse" />
+                           <span>Simulated Route Breakdown</span>
+                        </div>
+                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded">
+                           ⚡ ~22.4% Est. Savings
+                        </span>
+                     </div>
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div className="space-y-1">
+                           <span className="text-[9px] font-black text-slate-450 uppercase tracking-widest block font-mono">Segment 1: Rail (75% Split)</span>
+                           <div className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
+                              <Train size={13} className="text-emerald-500" />
+                              <span>{formData.siteLocation || 'MOCK_SRC'} → {formData.destination || 'AHMEDABAD'}</span>
+                           </div>
+                           <span className="text-[9px] font-bold text-slate-400 block font-mono">Cost: ₹{Math.round(materialWeight * getDistance(formData.destination) * 0.75 * 1.8).toLocaleString('en-IN')} (₹1.80/T-KM)</span>
+                        </div>
+
+                        <div className="space-y-1">
+                           <span className="text-[9px] font-black text-slate-450 uppercase tracking-widest block font-mono">Segment 2: Road (25% Split)</span>
+                           <div className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
+                              <Truck size={13} className="text-blue-500" />
+                              <span>Last-mile Depot delivery</span>
+                           </div>
+                           <span className="text-[9px] font-bold text-slate-400 block font-mono">Cost: ₹{Math.round(materialWeight * getDistance(formData.destination) * 0.25 * 4.6).toLocaleString('en-IN')} (₹4.60/T-KM)</span>
+                        </div>
+                     </div>
+
+                     <div className="pt-2.5 border-t border-slate-100 dark:border-slate-850 flex flex-col sm:flex-row sm:justify-between sm:items-center text-xs font-bold text-slate-500 gap-2">
+                        <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                           <TrendingDown size={14} className="text-emerald-600" />
+                           <span>Total Multi-Modal Freight: <span className="font-black text-emerald-600 font-mono text-sm leading-none ml-1">₹{Math.round((materialWeight * getDistance(formData.destination) * 0.75 * 1.8) + (materialWeight * getDistance(formData.destination) * 0.25 * 4.6)).toLocaleString('en-IN')}</span></span>
+                        </div>
+                        <span className="font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 px-2 py-1 rounded-lg text-[9px] uppercase tracking-wider font-mono self-start sm:self-auto">Hybrid Dispatch Ready</span>
+                     </div>
+                  </div>
+               )}
             </div>
 
             {/* Calculate Button */}

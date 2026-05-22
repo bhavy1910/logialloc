@@ -2,15 +2,37 @@
 import React, { useState, useMemo } from 'react';
 import { TransportMode, Requirement, Driver } from '../types';
 import { DB } from '../store';
-import { Truck, Train, ArrowRight, CheckCircle2, AlertCircle, Users } from 'lucide-react';
+import { Truck, Train, ArrowRight, CheckCircle2, AlertCircle, Users, Sparkles, TrendingDown, Award, Plus } from 'lucide-react';
 
 interface Props {
   requirement: Requirement;
   onNext: (alloc: any) => void;
+  onNavigateView?: (view: string) => void;
 }
 
-const ModeAllocation: React.FC<Props> = ({ requirement, onNext }) => {
+const ModeAllocation: React.FC<Props> = ({ requirement, onNext, onNavigateView }) => {
   const [selectedMode, setSelectedMode] = useState<TransportMode>(TransportMode.TRUCK);
+
+  const providers = useMemo(() => {
+    return {
+      rail: [
+        { id: 'R_PRV_1', name: 'Indian Railways (National Rake FOIS)', rate: 2.1, duration: '4-6 Days', reliability: '94%' },
+        { id: 'R_PRV_2', name: 'Adani Dedicated Logistics (Bulk)', rate: 1.8, duration: '3-4 Days', reliability: '98%' },
+        { id: 'R_PRV_3', name: 'Concor India (Multi-modal Cargo)', rate: 2.25, duration: '4-5 Days', reliability: '96%' },
+      ],
+      road: [
+        { id: 'T_PRV_1', name: 'SwiftFlow Elite Fleet (Enterprise)', rate: 5.5, loading: 2500, unloading: 2500, duration: '1-2 Days', reliability: '95%' },
+        { id: 'T_PRV_2', name: 'VRL Logistics Carriers (Bulk)', rate: 4.9, loading: 2000, unloading: 2000, duration: '2-3 Days', reliability: '97%' },
+        { id: 'T_PRV_3', name: 'Gati Enterprise Service (Express)', rate: 5.2, loading: 2200, unloading: 2200, duration: '2 Days', reliability: '92%' },
+      ]
+    };
+  }, []);
+
+  const [selectedRailIndex, setSelectedRailIndex] = useState(1);
+  const [selectedRoadIndex, setSelectedRoadIndex] = useState(0);
+
+  const selectedRailProvider = providers.rail[selectedRailIndex];
+  const selectedRoadProvider = providers.road[selectedRoadIndex];
   
   const weight = parseFloat(requirement.materialAmount) || 0;
   const distance = requirement.distanceKm || 100;
@@ -18,10 +40,10 @@ const ModeAllocation: React.FC<Props> = ({ requirement, onNext }) => {
   // LOGISTICS ENGINE CALCULATIONS
   const logisticsData = useMemo(() => {
     // 1. Road Calculations
-    const roadRatePerTonneKm = 5.5;
+    const roadRatePerTonneKm = selectedRoadProvider.rate;
     const roadBaseCost = weight * distance * roadRatePerTonneKm;
-    const loadingCharges = 2500;
-    const unloadingCharges = 2500;
+    const loadingCharges = selectedRoadProvider.loading;
+    const unloadingCharges = selectedRoadProvider.unloading;
     const totalRoadCost = roadBaseCost + loadingCharges + unloadingCharges;
     
     // Truck Capacity: 25 Tonnes
@@ -30,7 +52,7 @@ const ModeAllocation: React.FC<Props> = ({ requirement, onNext }) => {
     const assignedDrivers = availableDrivers.slice(0, numTrucksNeeded).map(d => d.name);
 
     // 2. Rail Calculations
-    const railRatePerTonneKm = 2.1;
+    const railRatePerTonneKm = selectedRailProvider.rate;
     const totalRailCost = weight * distance * railRatePerTonneKm;
 
     return {
@@ -40,15 +62,15 @@ const ModeAllocation: React.FC<Props> = ({ requirement, onNext }) => {
         drivers: assignedDrivers,
         loading: loadingCharges,
         unloading: unloadingCharges,
-        duration: distance > 500 ? '2-3 Days' : '1 Day'
+        duration: selectedRoadProvider.duration
       },
       rail: {
         total: totalRailCost,
-        duration: '4-6 Days',
+        duration: selectedRailProvider.duration,
         link: 'https://fois.indianrail.gov.in/RailSAHAY/'
       }
     };
-  }, [weight, distance]);
+  }, [weight, distance, selectedRailProvider, selectedRoadProvider]);
 
   const handleConfirm = () => {
     if (selectedMode === TransportMode.RAIL) {
@@ -59,7 +81,7 @@ const ModeAllocation: React.FC<Props> = ({ requirement, onNext }) => {
       mode: selectedMode,
       quantity: `${weight} Tonnes`,
       numVehicles: selectedMode === TransportMode.RAIL ? 1 : logisticsData.road.vehicles,
-      assignedDrivers: selectedMode === TransportMode.RAIL ? ['Indian Railways'] : logisticsData.road.drivers,
+      assignedDrivers: selectedMode === TransportMode.RAIL ? [selectedRailProvider.name] : logisticsData.road.drivers,
       loadingCharges: selectedMode === TransportMode.RAIL ? 0 : logisticsData.road.loading,
       unloadingCharges: selectedMode === TransportMode.RAIL ? 0 : logisticsData.road.unloading,
       totalCost: selectedMode === TransportMode.RAIL ? logisticsData.rail.total : logisticsData.road.total,
@@ -70,11 +92,77 @@ const ModeAllocation: React.FC<Props> = ({ requirement, onNext }) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
+      
+      {/* Sourcing & Requirement Cohesive Tabs */}
+      {onNavigateView && (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 rounded-3xl flex flex-wrap gap-2 shadow-sm max-w-6xl mx-auto">
+          <button
+            onClick={() => onNavigateView('SUPPLIERS')}
+            className="flex-1 min-w-[200px] flex items-center justify-center space-x-2 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            <Award size={16} />
+            <span>1. Sourcing & RFQ Market</span>
+          </button>
+          <button
+            onClick={() => onNavigateView('CREATE_REQ')}
+            className="flex-1 min-w-[200px] flex items-center justify-center space-x-2 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            <Plus size={16} />
+            <span>2. Setup Transport Requirement</span>
+          </button>
+          <button
+            onClick={() => onNavigateView('ALLOCATE')}
+            className="flex-1 min-w-[200px] flex items-center justify-center space-x-2 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+          >
+            <TrendingDown size={16} />
+            <span>3. Mode & Provider Allocation</span>
+          </button>
+        </div>
+      )}
+
       <div className="text-center space-y-2">
         <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Select Transport Mode</h2>
-        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Clinker Allocation for {weight} Tonnes over {distance} KM</p>
+        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">{requirement.materialType || 'Material'} Allocation for {weight} Tonnes over {distance} KM</p>
       </div>
+
+      {requirement.isAiOptimized && (
+        <div className="bg-gradient-to-r from-indigo-500/10 via-emerald-500/10 to-blue-500/10 border-2 border-emerald-500/40 p-8 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm animate-in fade-in zoom-in-95 duration-500">
+          <div className="flex items-center space-x-5 text-left">
+            <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-950/60 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+              <Sparkles size={28} className="animate-bounce" />
+            </div>
+            <div>
+              <span className="text-[9px] bg-emerald-500 text-white font-black px-2 py-0.5 rounded uppercase tracking-wider">AI Route Optimization Approved</span>
+              <h3 className="text-xl font-black text-slate-800 dark:text-white mt-1">Accept Multi-Modal Hybrid Logistics</h3>
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl">
+                The AI network computed a combined Rail segment (75% via <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{selectedRailProvider.name}</span>) coupled with localized Road dispatch (25% via <span className="text-blue-600 dark:text-blue-400 font-extrabold">{selectedRoadProvider.name}</span>) from {requirement.siteLocation} to {requirement.destination} for an optimized total of <span className="font-extrabold text-emerald-600 font-mono text-sm">₹{Math.round((weight * distance * 0.75 * selectedRailProvider.rate) + (weight * distance * 0.25 * selectedRoadProvider.rate + selectedRoadProvider.loading)).toLocaleString()}</span>.
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => {
+              onNext({
+                mode: 'Hybrid' as any,
+                quantity: `${weight} Tonnes`,
+                numVehicles: Math.ceil((weight * 0.25) / 25), // local fleet vehicle requirement
+                assignedDrivers: [`Rail Segment (75% via ${selectedRailProvider.name})`, `Road Segment (25% via ${selectedRoadProvider.name})`],
+                loadingCharges: selectedRoadProvider.loading,
+                unloadingCharges: selectedRoadProvider.unloading,
+                totalCost: Math.round((weight * distance * 0.75 * selectedRailProvider.rate) + (weight * distance * 0.25 * selectedRoadProvider.rate + selectedRoadProvider.loading)),
+                duration: '3-4 Days (Integrated Multi-Modal)',
+                manufacturerContact: '+91 9123456789',
+                transportContact: '+91 9988776655'
+              });
+            }}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center space-x-2 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-emerald-500/20 whitespace-nowrap self-stretch md:self-auto justify-center"
+          >
+            <Sparkles size={16} />
+            <span>Lock-In AI Route</span>
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* ROAD LOGISTICS OPTION */}
@@ -118,8 +206,39 @@ const ModeAllocation: React.FC<Props> = ({ requirement, onNext }) => {
               </div>
             </div>
 
+            {/* Road Provider Multi-Select Compare Option */}
+            <div className="mt-6 pt-6 border-t border-current/10 space-y-3">
+              <span className="text-[10px] font-black uppercase tracking-wider block opacity-75">Compare Road Providers</span>
+              <div className="grid grid-cols-3 gap-2">
+                {providers.road.map((prv, idx) => (
+                  <button
+                    key={prv.id}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedRoadIndex(idx);
+                    }}
+                    className={`p-3 rounded-2xl border font-black text-center transition-all flex flex-col items-center justify-between col-span-1 ${
+                      selectedRoadIndex === idx
+                        ? selectedMode === TransportMode.TRUCK
+                          ? 'bg-white text-blue-600 border-white shadow-lg'
+                          : 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/10'
+                        : 'bg-transparent text-current border-current/20 hover:border-current/40'
+                    }`}
+                  >
+                    <span className="text-[9px] uppercase tracking-wider block truncate w-full">{prv.name.split(' ')[0]}</span>
+                    <span className="text-[10px] font-mono mt-1 font-black">₹{prv.rate}/T-KM</span>
+                  </button>
+                ))}
+              </div>
+              <div className="text-[10px] font-extrabold opacity-85 mt-2 flex justify-between uppercase tracking-wider">
+                <span>Fleet: {selectedRoadProvider.name}</span>
+                <span>Rel: {selectedRoadProvider.reliability}</span>
+              </div>
+            </div>
+
             {selectedMode === TransportMode.TRUCK && (
-              <div className="bg-black/10 rounded-2xl p-6 space-y-4 animate-in slide-in-from-top-2 duration-300">
+              <div className="bg-black/10 rounded-2xl p-6 mt-6 space-y-4 animate-in slide-in-from-top-2 duration-300">
                 <div className="flex items-center space-x-2 text-blue-100 mb-2">
                   <Users size={16} />
                   <span className="text-[10px] font-black uppercase tracking-[0.2em]">Assigned Personnel</span>
@@ -178,7 +297,38 @@ const ModeAllocation: React.FC<Props> = ({ requirement, onNext }) => {
               </div>
             </div>
 
-            <div className={`p-6 rounded-2xl flex items-start space-x-4 ${
+            {/* Rail Provider Multi-Select Compare Option */}
+            <div className="mt-6 pt-6 border-t border-current/10 space-y-3">
+              <span className="text-[10px] font-black uppercase tracking-wider block opacity-75">Compare Rail Providers</span>
+              <div className="grid grid-cols-3 gap-2">
+                {providers.rail.map((prv, idx) => (
+                  <button
+                    key={prv.id}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedRailIndex(idx);
+                    }}
+                    className={`p-3 rounded-2xl border font-black text-center transition-all flex flex-col items-center justify-between col-span-1 ${
+                      selectedRailIndex === idx
+                        ? selectedMode === TransportMode.RAIL
+                          ? 'bg-white text-emerald-600 border-white shadow-lg'
+                          : 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-500/10'
+                        : 'bg-transparent text-current border-current/20 hover:border-current/40'
+                    }`}
+                  >
+                    <span className="text-[9px] uppercase tracking-wider block truncate w-full">{prv.name.includes('Railways') ? 'Railways' : prv.name.split(' ')[0]}</span>
+                    <span className="text-[10px] font-mono mt-1 font-black">₹{prv.rate}/T-KM</span>
+                  </button>
+                ))}
+              </div>
+              <div className="text-[10px] font-extrabold opacity-85 mt-2 flex justify-between uppercase tracking-wider">
+                <span>Rake Service: {selectedRailProvider.name}</span>
+                <span>Rel: {selectedRailProvider.reliability}</span>
+              </div>
+            </div>
+
+            <div className={`p-6 mt-6 rounded-2xl flex items-start space-x-4 ${
               selectedMode === TransportMode.RAIL ? 'bg-black/10' : 'bg-slate-50 dark:bg-slate-800'
             }`}>
               <AlertCircle className="flex-shrink-0 mt-1" size={20} />

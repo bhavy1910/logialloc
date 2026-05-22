@@ -181,7 +181,7 @@ const BinPackingAI: React.FC = () => {
         </div>
         <div className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 px-4 py-3 rounded-2xl flex items-center space-x-2 border border-indigo-200">
           <Info size={16} />
-          <span className="text-[10px] font-black uppercase tracking-widest">Pillar 7 Configuration Active</span>
+          <span className="text-[10px] font-black uppercase tracking-widest">Space Heuristics Active</span>
         </div>
       </div>
 
