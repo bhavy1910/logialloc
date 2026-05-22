@@ -42,7 +42,7 @@ const Login: React.FC<Props> = ({ onLogin, onGoToSignup, isDarkMode }) => {
         <div className="w-full max-w-md space-y-12">
           <div className="space-y-4">
             <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
-              Welcome Back <span className="inline-block animate-bounce">👋</span>
+              Welcome Back
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-lg md:text-xl font-medium">
               Log in to manage your industrial logistics fleet.
